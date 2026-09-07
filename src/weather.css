@@ -1,0 +1,695 @@
+/* ===== App Container ===== */
+.app {
+  position: relative;
+  min-height: 100vh;
+  transition: background 0.8s ease;
+}
+
+/* Dark bottom overlay: keeps light day-sky gradients readable with white
+   UI text. Top stays transparent so header/search keep the sky look. */
+.app::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(10, 20, 40, 0) 25%,
+    rgba(10, 20, 40, 0.45) 100%
+  );
+}
+
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+  min-height: 100vh;
+}
+
+/* ===== Header ===== */
+.header {
+  margin-bottom: 2rem;
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.app-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.lang-btn,
+.theme-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+  transition: background 0.2s;
+}
+
+.lang-btn:hover,
+.theme-btn:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+/* ===== Unit toggle ===== */
+.unit-toggle {
+  display: flex;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 21px;
+  padding: 2px;
+  backdrop-filter: blur(10px);
+}
+
+.unit-opt {
+  border: none;
+  background: transparent;
+  color: #f5f7ff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0 0.7rem;
+  height: 30px;
+  border-radius: 18px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.unit-opt:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.unit-opt.active {
+  background: rgba(255, 255, 255, 0.32);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+/* ===== Language menu ===== */
+.lang-select {
+  position: relative;
+}
+
+.lang-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 170px;
+  padding: 0.35rem;
+  background: rgba(25, 30, 55, 0.92);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 14px;
+  list-style: none;
+  z-index: 100;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.4);
+  animation: dropdown-in 0.15s ease;
+}
+
+.lang-option {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 9px;
+  cursor: pointer;
+  color: #f5f7ff;
+  font-size: 0.95rem;
+  transition: background 0.15s;
+}
+
+.lang-option:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.lang-option.active {
+  background: rgba(255, 255, 255, 0.18);
+  font-weight: 600;
+}
+
+.lang-btn .flag {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.lang-flag {
+  display: flex;
+  align-items: center;
+}
+
+.lang-flag .flag {
+  width: 26px;
+  height: 19.5px;
+  border-radius: 3px;
+  object-fit: cover;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+@keyframes dropdown-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.geo-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+  transition: background 0.2s;
+}
+
+.geo-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.geo-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ===== Search Bar ===== */
+.search-container {
+  position: relative;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(12px);
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 0.6rem 0.85rem;
+  gap: 0.5rem;
+  transition: border-color 0.2s;
+}
+
+.search-bar:focus-within {
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.search-icon {
+  font-size: 1rem;
+  opacity: 0.7;
+}
+
+.search-bar input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.search-bar input::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* ===== Autocomplete Dropdown ===== */
+.suggestions-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: rgba(20, 20, 40, 0.95);
+  backdrop-filter: blur(16px);
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  list-style: none;
+  overflow: hidden;
+  z-index: 100;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.suggestion-item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  transition: background 0.15s;
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ===== Loading ===== */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 0;
+  gap: 1rem;
+}
+
+.loading p {
+  font-size: 0.95rem;
+  opacity: 0.7;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ===== Error ===== */
+.error-message {
+  background: rgba(255, 70, 70, 0.2);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 70, 70, 0.35);
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
+  margin-top: 1rem;
+}
+
+.error-message p {
+  font-size: 0.95rem;
+  opacity: 0.9;
+}
+
+/* ===== Welcome Screen ===== */
+.welcome {
+  text-align: center;
+  padding: 5rem 1rem;
+}
+
+.welcome-icon {
+  font-size: 4.5rem;
+  display: block;
+  margin-bottom: 1.25rem;
+}
+
+.welcome p {
+  font-size: 1.1rem;
+  opacity: 0.75;
+  max-width: 300px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* ===== Current Weather Card ===== */
+.current-weather {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.current-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.current-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.city-name {
+  font-size: 1.2rem;
+  font-weight: 500;
+  opacity: 1;
+}
+
+.geo-note {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 400;
+  opacity: 0.65;
+  line-height: 1.3;
+}
+
+.current-date {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize;
+  opacity: 0.82;
+}
+
+.weather-icon-large {
+  font-size: 2.8rem;
+}
+
+.current-main {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.temperature-large {
+  font-size: 4.5rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.condition-text {
+  font-size: 1.15rem;
+  opacity: 0.95;
+}
+
+.current-details {
+  display: flex;
+  gap: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.detail-label {
+  font-size: 0.75rem;
+  opacity: 0.8;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.detail-value {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* ===== Hourly Forecast ===== */
+.hourly-forecast {
+  margin-bottom: 1.5rem;
+}
+
+.section-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  opacity: 0.92;
+}
+
+.hourly-scroll {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+
+.hourly-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.hourly-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.hourly-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 2px;
+}
+
+.hourly-item {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.7rem 0.55rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  min-width: 62px;
+}
+
+.hourly-time {
+  font-size: 0.72rem;
+  opacity: 0.85;
+  font-weight: 500;
+}
+
+.hourly-icon {
+  font-size: 1.3rem;
+}
+
+.hourly-temp {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.hourly-precip {
+  font-size: 0.68rem;
+  color: #7ec8e3;
+  font-weight: 500;
+}
+
+/* ===== Daily Forecast ===== */
+.daily-forecast {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 1.25rem;
+}
+
+.daily-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.daily-item:last-child {
+  border-bottom: none;
+}
+
+.daily-day {
+  width: 84px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.daily-dayname {
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.daily-date {
+  font-size: 0.72rem;
+  opacity: 0.7;
+}
+
+.daily-icon {
+  font-size: 1.25rem;
+  width: 30px;
+  text-align: center;
+}
+
+.daily-condition {
+  flex: 1;
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+.daily-temps {
+  display: flex;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+}
+
+.daily-max {
+  font-weight: 700;
+}
+
+.daily-min {
+  opacity: 0.75;
+}
+
+/* ===================================================================
+   WEATHER BACKGROUNDS — dynamic gradients per condition + day/night
+   =================================================================== */
+
+/* Default (no data loaded) */
+.weather-bg-default {
+  background: linear-gradient(160deg, #667eea 0%, #764ba2 100%);
+}
+
+/* ---- DAY ---- */
+.weather-bg-clear {
+  background: linear-gradient(180deg, #2980b9 0%, #6dd5fa 55%, #bfe0f2 100%);
+}
+
+.weather-bg-partly-cloudy {
+  background: linear-gradient(180deg, #4a90d9 0%, #89b4e8 50%, #aec9e0 100%);
+}
+
+.weather-bg-cloudy {
+  background: linear-gradient(180deg, #606c88 0%, #8896a8 50%, #a8b5c4 100%);
+}
+
+.weather-bg-fog {
+  background: linear-gradient(180deg, #9aa8b8 0%, #b8c6d6 50%, #cfd8e3 100%);
+}
+
+.weather-bg-drizzle {
+  background: linear-gradient(180deg, #4b6584 0%, #6b8ca8 50%, #8eacc4 100%);
+}
+
+.weather-bg-rain {
+  background: linear-gradient(180deg, #2c3e50 0%, #3a5f7e 50%, #4a7a9e 100%);
+}
+
+.weather-bg-snow {
+  background: linear-gradient(180deg, #4a6fa5 0%, #77a3c7 50%, #9cc0db 100%);
+}
+
+.weather-bg-storm {
+  background: linear-gradient(180deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+}
+
+/* ---- NIGHT ---- */
+.weather-bg-night-clear {
+  background: linear-gradient(180deg, #0c1445 0%, #1a237e 45%, #283593 100%);
+}
+
+.weather-bg-night-cloudy {
+  background: linear-gradient(180deg, #1a1a2e 0%, #1f2a44 50%, #263350 100%);
+}
+
+.weather-bg-night {
+  background: linear-gradient(180deg, #0f0c29 0%, #1a1a3e 50%, #24243e 100%);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 480px) {
+  .container {
+    padding: 1rem 0.75rem;
+  }
+
+  .temperature-large {
+    font-size: 3.5rem;
+  }
+
+  .weather-icon-large {
+    font-size: 2.2rem;
+  }
+
+  .current-details {
+    gap: 1.25rem;
+  }
+
+  .daily-condition {
+    display: none;
+  }
+}
+
+/* ===== Dark theme ===== */
+.app.dark-mode::before {
+  background: linear-gradient(
+    180deg,
+    rgba(5, 10, 28, 0.28) 15%,
+    rgba(5, 10, 28, 0.82) 100%
+  );
+}
+
+.app.dark-mode .search-bar,
+.app.dark-mode .suggestions-dropdown {
+  background: rgba(10, 16, 34, 0.55);
+}
+
+.app.dark-mode .geo-btn,
+.app.dark-mode .lang-btn,
+.app.dark-mode .theme-btn {
+  background: rgba(10, 16, 34, 0.6);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.app.dark-mode .geo-btn:hover,
+.app.dark-mode .lang-btn:hover,
+.app.dark-mode .theme-btn:hover {
+  background: rgba(10, 16, 34, 0.85);
+}
+
+.app.dark-mode .lang-dropdown {
+  background: rgba(8, 12, 26, 0.97);
+}
+
+.app.dark-mode .unit-toggle {
+  background: rgba(10, 16, 34, 0.6);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.app.dark-mode .unit-opt.active {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.app.dark-mode .current-weather,
+.app.dark-mode .daily-forecast,
+.app.dark-mode .hourly-item {
+  background: rgba(8, 14, 32, 0.6);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.app.dark-mode .welcome-state {
+  background: rgba(8, 14, 32, 0.45);
+  border-color: rgba(255, 255, 255, 0.1);
+}
