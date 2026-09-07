@@ -13,7 +13,7 @@ A frontend-only weather forecast app built with React, TypeScript and Vite. No b
 
 ## Tech Stack
 
-- React 18 + TypeScript
+- React 19 + TypeScript
 - Vite 6
 - Flag SVG icons (no flag-icons CSS dependency)
 
