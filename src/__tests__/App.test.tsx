@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import type { GeocodingResponse, ForecastResponse } from '../types';
 import App from '../App';
 import { LangProvider } from '../i18n';
+import { clearGeocodingCache } from '../api';
 
 /* ------------------------------------------------------------------ */
 /*  Test data                                                          */
@@ -130,6 +131,7 @@ function stubGeolocation(
 describe('App', () => {
   beforeEach(() => {
     localStorage.clear();
+    clearGeocodingCache();
     vi.useFakeTimers({ shouldAdvanceTime: true });
     vi.stubGlobal('fetch', mockFetch);
   });
@@ -216,6 +218,59 @@ describe('App', () => {
     expect(screen.queryByText(/search for a city/i)).not.toBeInTheDocument();
     expect(
       screen.getByText('Search failed. Please try again.'),
+    ).toBeInTheDocument();
+  });
+
+  it('does not show the search error when a superseded (aborted) request rejects', async () => {
+    // First geocoding call stays pending until we abort it via a new keystroke.
+    let rejectFirst!: (e: Error) => void;
+    const firstPending = new Promise<object>((_res, rej) => {
+      rejectFirst = rej;
+    });
+
+    let callNum = 0;
+    stubFetchByUrl({
+      geocoding: () => {
+        callNum += 1;
+        if (callNum === 1) return firstPending;
+        return Promise.resolve(ok(mockGeocodingResponse));
+      },
+    });
+    renderApp();
+
+    const input = screen.getByPlaceholderText(/search/i);
+
+    // First search: debounce fires, geocoding request starts (stays pending).
+    await userEvent.type(input, 'Bue', { delay: null });
+    await act(async () => {
+      vi.advanceTimersByTime(500);
+    });
+
+    // Type more quickly: cleanup aborts the first request, a second request
+    // runs and resolves with real suggestions.
+    await userEvent.type(input, 'nos', { delay: null });
+    await act(async () => {
+      vi.advanceTimersByTime(500);
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('Buenos Aires, Buenos Aires, Argentina'),
+      ).toBeInTheDocument();
+    });
+
+    // Now the superseded first request rejects with AbortError. Because its
+    // controller was aborted, the component must NOT surface a search error.
+    await act(async () => {
+      rejectFirst(new DOMException('The operation was aborted.', 'AbortError'));
+    });
+
+    expect(
+      screen.queryByText('Search failed. Please try again.'),
+    ).not.toBeInTheDocument();
+    // The successful second search still rendered its suggestion.
+    expect(
+      screen.getByText('Buenos Aires, Buenos Aires, Argentina'),
     ).toBeInTheDocument();
   });
 

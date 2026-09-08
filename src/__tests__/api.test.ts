@@ -1,9 +1,16 @@
-import { searchCities, reverseGeocode, getForecast, isValidForecast } from '../api';
+import {
+  searchCities,
+  reverseGeocode,
+  getForecast,
+  isValidForecast,
+  clearGeocodingCache,
+} from '../api';
 
 const mockFetch = vi.fn();
 
 beforeEach(() => {
   mockFetch.mockReset();
+  clearGeocodingCache();
   vi.stubGlobal('fetch', mockFetch);
 });
 
@@ -98,6 +105,56 @@ describe('searchCities', () => {
     mockFetch.mockRejectedValueOnce(new Error('Network fail'));
 
     await expect(searchCities('test')).rejects.toThrow('Network fail');
+  });
+});
+
+describe('searchCities geocoding cache', () => {
+  it('calls fetch only once for repeated identical queries and returns the same promise', async () => {
+    const mockData = { results: [] };
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockData),
+    });
+
+    const first = searchCities('buenos aires');
+    const second = searchCities('Buenos Aires'); // normalized same key, case differs
+
+    // The identical query reuses the same underlying in-flight promise.
+    expect(first).toBe(second);
+
+    const [r1, r2] = await Promise.all([first, second]);
+    expect(r1).toEqual(mockData);
+    expect(r2).toEqual(mockData);
+    // Both calls reused a single network request.
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('reuses the cached promise across two separate awaits after a success', async () => {
+    const mockData = { results: [{ id: 1, name: 'Madrid' }] };
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockData),
+    });
+
+    const first = await searchCities(' madrid '); // trailing spaces normalized
+    const second = await searchCities('madrid');
+
+    expect(first).toEqual(mockData);
+    expect(second).toEqual(mockData);
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not cache errors, so a retry hits the network again', async () => {
+    mockFetch.mockRejectedValueOnce(new Error('Network fail'));
+    await expect(searchCities('berlin')).rejects.toThrow('Network fail');
+
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ results: [] }),
+    });
+    await expect(searchCities('berlin')).resolves.toEqual({ results: [] });
+
+    expect(mockFetch).toHaveBeenCalledTimes(2);
   });
 });
 
