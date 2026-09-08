@@ -109,12 +109,14 @@ describe('reverseGeocode', () => {
     });
   });
 
-  it('falls back to locality when city is missing', async () => {
+  it('prefers locality over city when both are present', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: () =>
         Promise.resolve({
+          city: 'Córdoba',
           locality: 'Villa General Belgrano',
+          principalSubdivision: 'Córdoba',
           countryName: 'Argentina',
         }),
     });
@@ -122,6 +124,7 @@ describe('reverseGeocode', () => {
     const result = await reverseGeocode(-31.9, -64.5);
     expect(result).toEqual({
       name: 'Villa General Belgrano',
+      admin1: 'Córdoba',
       country: 'Argentina',
     });
   });

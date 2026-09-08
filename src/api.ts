@@ -34,7 +34,7 @@ export async function reverseGeocode(
     principalSubdivision?: string;
     countryName?: string;
   } = await res.json();
-  const name = data.city || data.locality;
+  const name = data.locality || data.city;
   if (!name || !data.countryName) return null;
   return {
     name,
