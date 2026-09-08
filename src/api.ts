@@ -3,11 +3,67 @@ import type { GeocodingResponse, ForecastResponse } from './types';
 const GEOCODING_BASE = 'https://geocoding-api.open-meteo.com/v1/search';
 const FORECAST_BASE = 'https://api.open-meteo.com/v1/forecast';
 
-export async function searchCities(query: string): Promise<GeocodingResponse> {
+/* ------------------------------------------------------------------ */
+/*  Geocoding cache (client-side quota backstop)                        */
+/* ------------------------------------------------------------------ */
+
+const GEOCODING_TTL_MS = 10 * 60 * 1000; // ~10 minutes
+const geocodingCache = new Map<
+  string,
+  { value: Promise<GeocodingResponse>; ts: number }
+>();
+
+function normalizeQuery(query: string): string {
+  return query.trim().toLowerCase();
+}
+
+export interface SearchOptions {
+  signal?: AbortSignal;
+}
+
+/**
+ * Clear the in-memory geocoding cache. Exposed primarily for tests so cached
+ * state doesn't leak between test cases.
+ */
+export function clearGeocodingCache(): void {
+  geocodingCache.clear();
+}
+
+export function searchCities(
+  query: string,
+  options: SearchOptions = {},
+): Promise<GeocodingResponse> {
+  const key = normalizeQuery(query);
+
+  // Reuse an in-flight promise OR a still-fresh cached promise for the same
+  // query instead of hitting the network again.
+  const cached = geocodingCache.get(key);
+  if (cached && Date.now() - cached.ts < GEOCODING_TTL_MS) {
+    return cached.value;
+  }
+
   const url = `${GEOCODING_BASE}?name=${encodeURIComponent(query)}&count=5&language=es&format=json`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Geocoding request failed: ${res.status}`);
-  return res.json();
+
+  const promise = (async () => {
+    // Abort before the fetch starts if the signal is already aborted.
+    if (options.signal?.aborted) {
+      throw new DOMException('The operation was aborted.', 'AbortError');
+    }
+    const res = await fetch(url, { signal: options.signal });
+    if (!res.ok) throw new Error(`Geocoding request failed: ${res.status}`);
+    return res.json() as Promise<GeocodingResponse>;
+  })();
+
+  geocodingCache.set(key, { value: promise, ts: Date.now() });
+
+  // Never cache errors — drop the entry if this request fails so callers
+  // don't hit a stale rejection on the cache route. The catch chain handles
+  // the rejection so it never counts as unhandled.
+  promise.catch(() => {
+    geocodingCache.delete(key);
+  });
+
+  return promise;
 }
 
 export interface ReversePlace {

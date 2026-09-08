@@ -270,13 +270,19 @@ export default function App() {
       return;
     }
 
+    const controller = new AbortController();
+
     debounceRef.current = setTimeout(async () => {
       try {
-        const data = await searchCities(query);
+        const data = await searchCities(query, { signal: controller.signal });
+        if (controller.signal.aborted) return;
         setSuggestions(data.results ?? []);
         setShowDropdown(true);
         setError(null);
-      } catch {
+      } catch (err) {
+        // Ignore aborts: a newer keystroke superseded this request, so it is
+        // not a real failure and must NOT surface the search error.
+        if (controller.signal.aborted) return;
         setSuggestions([]);
         setShowDropdown(false);
         setError(t('errorSearch'));
@@ -285,6 +291,8 @@ export default function App() {
 
     return () => {
       if (debounceRef.current !== undefined) clearTimeout(debounceRef.current);
+      // Cancel any in-flight geocoding request on a new keystroke.
+      controller.abort();
     };
   }, [query]);
 
