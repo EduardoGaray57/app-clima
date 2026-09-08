@@ -74,6 +74,7 @@ const errorRes = (status: number) => ({ ok: false, status });
 function stubFetchByUrl(config: {
   geocoding?: () => Promise<object>;
   forecast?: () => Promise<object>;
+  reverseGeocode?: () => Promise<object>;
 }) {
   mockFetch.mockImplementation((url: string) => {
     if (url.includes('geocoding-api.open-meteo.com')) {
@@ -83,6 +84,11 @@ function stubFetchByUrl(config: {
       return (
         config.forecast ??
         (() => Promise.resolve(ok({ current: {}, hourly: {}, daily: {} })))
+      )();
+    }
+    if (url.includes('api-bdc.io')) {
+      return (
+        config.reverseGeocode ?? (() => Promise.resolve(ok({})))
       )();
     }
     return Promise.resolve(ok({}));
@@ -108,6 +114,15 @@ const typeSearch = async (text: string) => {
 
 const currentTemp = () => document.querySelector('.temperature-large');
 
+function stubGeolocation(
+  getCurrentPosition: typeof navigator.geolocation.getCurrentPosition,
+) {
+  Object.defineProperty(navigator, 'geolocation', {
+    configurable: true,
+    value: { getCurrentPosition },
+  });
+}
+
 /* ------------------------------------------------------------------ */
 /*  Tests                                                              */
 /* ------------------------------------------------------------------ */
@@ -122,6 +137,10 @@ describe('App', () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.restoreAllMocks();
+    Object.defineProperty(navigator, 'geolocation', {
+      configurable: true,
+      value: undefined,
+    });
   });
 
   it('renders the empty state with a search box', () => {
@@ -182,7 +201,7 @@ describe('App', () => {
     expect(screen.getByText(/search for a city/i)).toBeInTheDocument();
   });
 
-  it('clears suggestions and stays in empty state when geocoding rejects', async () => {
+  it('clears suggestions and shows search error when geocoding rejects', async () => {
     stubFetchByUrl({
       geocoding: () => Promise.reject(new Error('Network error')),
     });
@@ -190,11 +209,14 @@ describe('App', () => {
 
     await typeSearch('Buenos');
 
-    // The catch block swallows the error and clears suggestions
+    // Suggestions are cleared, dropdown is hidden, error is shown
     expect(
       screen.queryByText('Buenos Aires, Buenos Aires, Argentina'),
     ).not.toBeInTheDocument();
-    expect(screen.getByText(/search for a city/i)).toBeInTheDocument();
+    expect(screen.queryByText(/search for a city/i)).not.toBeInTheDocument();
+    expect(
+      screen.getByText('Search failed. Please try again.'),
+    ).toBeInTheDocument();
   });
 
   it('shows an error message when the forecast fetch fails', async () => {
@@ -301,5 +323,117 @@ describe('App', () => {
 
     expect(appDiv).not.toHaveClass('dark-mode');
     expect(themeBtn).toHaveTextContent('🌙');
+  });
+
+  /* -------------------------------------------------------------- */
+  /*  Failure-tolerance battery                                      */
+  /* -------------------------------------------------------------- */
+
+  it('shows a permission error when geolocation is denied', async () => {
+    stubGeolocation((_success, error) => {
+      error({ message: 'User denied Geolocation' });
+    });
+    stubFetchByUrl({});
+    renderApp();
+
+    await userEvent.click(screen.getByTitle(/use current location/i));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          'Unable to retrieve your location. Please allow location access.',
+        ),
+      ).toBeInTheDocument();
+    });
+    expect(document.querySelector('.temperature-large')).toBeNull();
+  });
+
+  it('shows an error when geolocation is not supported', async () => {
+    Object.defineProperty(navigator, 'geolocation', {
+      configurable: true,
+      value: undefined,
+    });
+    stubFetchByUrl({});
+    renderApp();
+
+    await userEvent.click(screen.getByTitle(/use current location/i));
+
+    expect(
+      screen.getByText('Geolocation is not supported by your browser.'),
+    ).toBeInTheDocument();
+  });
+
+  it('renders the forecast with a generic label when reverse geocoding fails', async () => {
+    stubGeolocation((success) => {
+      success({
+        coords: { latitude: -33.37, longitude: -70.73, accuracy: 100 },
+      });
+    });
+    stubFetchByUrl({
+      reverseGeocode: () => Promise.reject(new Error('Reverse geocode failed')),
+      forecast: () => Promise.resolve(ok(createMockForecast())),
+    });
+    renderApp();
+
+    await userEvent.click(screen.getByTitle(/use current location/i));
+
+    await waitFor(() => {
+      expect(currentTemp()).toHaveTextContent('25°');
+    });
+    expect(screen.getByText('Current Location')).toBeInTheDocument();
+    expect(screen.queryByText(/error/i)).not.toBeInTheDocument();
+  });
+
+  it('shows an error message when the forecast returns 429', async () => {
+    stubFetchByUrl({
+      geocoding: () => Promise.resolve(ok(mockGeocodingResponse)),
+      forecast: () => Promise.resolve(errorRes(429)),
+    });
+    renderApp();
+
+    await typeSearch('Buenos');
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('Buenos Aires, Buenos Aires, Argentina'),
+      ).toBeInTheDocument();
+    });
+
+    await userEvent.click(
+      screen.getByText('Buenos Aires, Buenos Aires, Argentina'),
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Failed to fetch forecast. Please try again./i),
+      ).toBeInTheDocument();
+    });
+  });
+
+  it('does not crash and shows an error when the forecast response is malformed', async () => {
+    stubFetchByUrl({
+      geocoding: () => Promise.resolve(ok(mockGeocodingResponse)),
+      forecast: () => Promise.resolve(ok({})),
+    });
+    renderApp();
+
+    await typeSearch('Buenos');
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('Buenos Aires, Buenos Aires, Argentina'),
+      ).toBeInTheDocument();
+    });
+
+    await userEvent.click(
+      screen.getByText('Buenos Aires, Buenos Aires, Argentina'),
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Failed to fetch forecast. Please try again./i),
+      ).toBeInTheDocument();
+    });
+    expect(document.querySelector('.temperature-large')).toBeNull();
   });
 });

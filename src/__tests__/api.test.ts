@@ -1,4 +1,4 @@
-import { searchCities, reverseGeocode, getForecast } from '../api';
+import { searchCities, reverseGeocode, getForecast, isValidForecast } from '../api';
 
 const mockFetch = vi.fn();
 
@@ -10,6 +10,33 @@ beforeEach(() => {
 afterEach(() => {
   vi.restoreAllMocks();
 });
+
+/* ------------------------------------------------------------------ */
+/*  Valid forecast fixture (passes isValidForecast)                    */
+/* ------------------------------------------------------------------ */
+
+const validForecastData = {
+  current: {
+    temperature_2m: 25,
+    relative_humidity_2m: 60,
+    weather_code: 0,
+    wind_speed_10m: 10,
+    is_day: 1,
+  },
+  hourly: {
+    time: ['2024-01-01T00:00'],
+    temperature_2m: [25],
+    weather_code: [0],
+    relative_humidity_2m: [60],
+    precipitation_probability: [0],
+  },
+  daily: {
+    time: ['2024-01-01'],
+    weather_code: [0],
+    temperature_2m_max: [30],
+    temperature_2m_min: [18],
+  },
+};
 
 describe('searchCities', () => {
   it('builds correct Open-Meteo geocoding URL with encoded query and params', async () => {
@@ -179,7 +206,7 @@ describe('getForecast', () => {
   it('builds correct forecast URL with lat/lon and expected parameters', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: () => Promise.resolve({ current: {}, hourly: {}, daily: {} }),
+      json: () => Promise.resolve(validForecastData),
     });
 
     await getForecast(-34.6, -58.4);
@@ -196,18 +223,13 @@ describe('getForecast', () => {
   });
 
   it('returns parsed forecast response on success', async () => {
-    const mockData = {
-      current: { temperature_2m: 25, weather_code: 0 },
-      hourly: { time: [], temperature_2m: [] },
-      daily: { time: [], weather_code: [] },
-    };
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: () => Promise.resolve(mockData),
+      json: () => Promise.resolve(validForecastData),
     });
 
     const result = await getForecast(0, 0);
-    expect(result).toEqual(mockData);
+    expect(result).toEqual(validForecastData);
   });
 
   it('throws on HTTP error with status code', async () => {
@@ -222,5 +244,106 @@ describe('getForecast', () => {
     mockFetch.mockRejectedValueOnce(new Error('Network fail'));
 
     await expect(getForecast(0, 0)).rejects.toThrow('Network fail');
+  });
+
+  it('rejects when fetch resolves ok with malformed JSON', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({}),
+    });
+
+    await expect(getForecast(0, 0)).rejects.toThrow(
+      'Malformed forecast response',
+    );
+  });
+});
+
+describe('isValidForecast', () => {
+  it('returns true for a valid ForecastResponse', () => {
+    expect(isValidForecast(validForecastData)).toBe(true);
+  });
+
+  it('returns false for null / non-object', () => {
+    expect(isValidForecast(null)).toBe(false);
+    expect(isValidForecast(undefined)).toBe(false);
+    expect(isValidForecast(42)).toBe(false);
+    expect(isValidForecast('string')).toBe(false);
+    expect(isValidForecast(true)).toBe(false);
+  });
+
+  it('returns false when current is missing a required field', () => {
+    const data = {
+      current: { temperature_2m: 25, weather_code: 0 },
+      hourly: {
+        time: ['2024-01-01T00:00'],
+        temperature_2m: [25],
+        weather_code: [0],
+        relative_humidity_2m: [60],
+        precipitation_probability: [0],
+      },
+      daily: {
+        time: ['2024-01-01'],
+        weather_code: [0],
+        temperature_2m_max: [30],
+        temperature_2m_min: [18],
+      },
+    };
+    expect(isValidForecast(data)).toBe(false);
+  });
+
+  it('returns false when hourly.time is missing or not an array', () => {
+    const noTime = {
+      current: validForecastData.current,
+      hourly: {
+        temperature_2m: [25],
+        weather_code: [0],
+        relative_humidity_2m: [60],
+        precipitation_probability: [0],
+      },
+      daily: validForecastData.daily,
+    };
+    expect(isValidForecast(noTime)).toBe(false);
+
+    const stringTime = {
+      current: validForecastData.current,
+      hourly: {
+        time: 'not-an-array',
+        temperature_2m: [25],
+        weather_code: [0],
+        relative_humidity_2m: [60],
+        precipitation_probability: [0],
+      },
+      daily: validForecastData.daily,
+    };
+    expect(isValidForecast(stringTime)).toBe(false);
+  });
+
+  it('returns false when hourly arrays have mismatched lengths', () => {
+    const data = {
+      current: validForecastData.current,
+      hourly: {
+        time: ['2024-01-01T00:00', '2024-01-01T01:00'],
+        temperature_2m: [25],
+        weather_code: [0],
+        relative_humidity_2m: [60],
+        precipitation_probability: [0],
+      },
+      daily: validForecastData.daily,
+    };
+    expect(isValidForecast(data)).toBe(false);
+  });
+
+  it('returns false when a daily array is empty', () => {
+    const data = {
+      current: validForecastData.current,
+      hourly: validForecastData.hourly,
+      daily: {
+        time: [],
+        weather_code: [],
+        temperature_2m_max: [],
+        temperature_2m_min: [],
+      },
+    };
+    expect(isValidForecast(data)).toBe(false);
   });
 });

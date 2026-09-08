@@ -43,6 +43,7 @@ const ui = {
     errorGeo: 'Geolocation is not supported by your browser.',
     errorGeoPerm:
       'Unable to retrieve your location. Please allow location access.',
+    errorSearch: 'Search failed. Please try again.',
     hourly: 'Hourly Forecast',
     daily: '7-Day Forecast',
     wind: 'Wind',
@@ -64,6 +65,7 @@ const ui = {
     errorGeo: 'Tu navegador no soporta geolocalización.',
     errorGeoPerm:
       'No se pudo obtener tu ubicación. Permití el acceso a la ubicación.',
+    errorSearch: 'No se pudo buscar. Intentá de nuevo.',
     hourly: 'Pronóstico por hora',
     daily: 'Pronóstico a 7 días',
     wind: 'Viento',
@@ -84,6 +86,7 @@ const ui = {
     errorGeo: 'Seu navegador não suporta geolocalização.',
     errorGeoPerm:
       'Não foi possível obter sua localização. Permita o acesso à localização.',
+    errorSearch: 'Não foi possível buscar. Tente novamente.',
     hourly: 'Previsão por hora',
     daily: 'Previsão de 7 dias',
     wind: 'Vento',
@@ -105,6 +108,7 @@ const ui = {
     errorGeo: 'Votre navigateur ne prend pas en charge la géolocalisation.',
     errorGeoPerm:
       "Impossible d'obtenir votre position. Autorisez l'accès à la localisation.",
+    errorSearch: 'Recherche impossible. Réessayez.',
     hourly: 'Prévisions horaires',
     daily: 'Prévisions sur 7 jours',
     wind: 'Vent',
@@ -127,6 +131,7 @@ const ui = {
     errorGeo: 'Ihr Browser unterstützt keine Geolokalisierung.',
     errorGeoPerm:
       'Standort konnte nicht ermittelt werden. Bitte Standortzugriff erlauben.',
+    errorSearch: 'Suche fehlgeschlagen. Bitte erneut versuchen.',
     hourly: 'Stündliche Vorhersage',
     daily: '7-Tage-Vorhersage',
     wind: 'Wind',
@@ -148,6 +153,7 @@ const ui = {
     errorGeo: 'Il tuo browser non supporta la geolocalizzazione.',
     errorGeoPerm:
       'Impossibile ottenere la tua posizione. Consenti l\'accesso alla posizione.',
+    errorSearch: 'Ricerca non riuscita. Riprova.',
     hourly: 'Previsioni orarie',
     daily: 'Previsioni a 7 giorni',
     wind: 'Vento',
@@ -169,6 +175,7 @@ const ui = {
     errorGeo: 'お使いのブラウザは位置情報に対応していません。',
     errorGeoPerm:
       '位置情報を取得できませんでした。位置情報へのアクセスを許可してください。',
+    errorSearch: '検索できませんでした。もう一度お試しください。',
     hourly: '時間ごとの予報',
     daily: '7日間の予報',
     wind: '風',

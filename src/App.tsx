@@ -275,8 +275,11 @@ export default function App() {
         const data = await searchCities(query);
         setSuggestions(data.results ?? []);
         setShowDropdown(true);
+        setError(null);
       } catch {
         setSuggestions([]);
+        setShowDropdown(false);
+        setError(t('errorSearch'));
       }
     }, 400);
 
