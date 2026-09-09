@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+  </defs>
+  <rect width="192" height="192" rx="40" fill="url(#bg)"/>
+  <!-- Sun -->
+  <circle cx="120" cy="60" r="24" fill="#fbbf24"/>
+  <g stroke="#fbbf24" stroke-width="4" stroke-linecap="round">
+    <line x1="120" y1="26" x2="120" y2="18"/>
+    <line x1="120" y1="102" x2="120" y2="94"/>
+    <line x1="86" y1="60" x2="78" y2="60"/>
+    <line x1="162" y1="60" x2="154" y2="60"/>
+    <line x1="96" y1="36" x2="90" y2="30"/>
+    <line x1="150" y1="90" x2="144" y2="84"/>
+    <line x1="96" y1="84" x2="90" y2="90"/>
+    <line x1="150" y1="30" x2="144" y2="36"/>
+  </g>
+  <!-- Cloud -->
+  <path d="M50 130 a28 28 0 0 1 0-56 h4 a36 36 0 0 1 68-8 h2 a24 24 0 0 1 2 48 h-76z" fill="white" opacity="0.95"/>
+  <!-- Thermometer hint -->
+  <rect x="58" y="110" width="6" height="20" rx="3" fill="#ef4444" opacity="0.8"/>
+  <circle cx="61" cy="133" r="5" fill="#ef4444" opacity="0.8"/>
+</svg>
